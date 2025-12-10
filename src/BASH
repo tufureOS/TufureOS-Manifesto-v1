@@ -1,0 +1,2 @@
+python3 -m http.server 8000   # or trunk serve / cargo shuttle
+# open http://localhost:8000
