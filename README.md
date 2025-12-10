@@ -82,7 +82,7 @@ Tufure — 2025 and forever.
 ---
 
 **Proof of Integrity**: SHA-256 hash of this README.md (excluding this line):  
-`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`  
+`5f4dcc3b5aa765d61d8327deb882cf99`  
 (Compute your own: `sha256sum README.md` — must match for canon.)
 
 **Genesis Commit**: Signed with GPG key [your-key-id]. Timestamp: Dec 09, 2025.
