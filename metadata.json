@@ -1,0 +1,14 @@
+{
+  "name": "Tufure Manifesto v1 — The Kernelless OS",
+  "description": "The original manifesto that ends centralized kernels forever. Λ is emergent. The boundary is the only truth.",
+  "image": "ipfs://bafybei________________/equation.png",
+  "external_url": "https://tufure.com/manifesto",
+  "attributes": [
+    { "trait_type": "Version", "value": "v1" },
+    { "trait_type": "Date", "value": "December 2025" },
+    { "trait_type": "Λ Provenance", "value": "Supersymmetric Holographic Emergence" },
+    { "trait_type": "Kernel Status", "value": "Dead" }
+  ],
+  "background_color": "000000",
+  "animation_url": "ipfs://bafybei________________/manifesto.pdf"
+}
