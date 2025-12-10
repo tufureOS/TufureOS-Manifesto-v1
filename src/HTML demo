@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TSU v0.1 — Live Entropy Logger</title>
+  <style>
+    body { background:#000; color:#0f0; font-family:monospace; padding:2rem; }
+    .big { font-size:4rem; }
+  </style>
+</head>
+<body>
+  <h1>TUFURE™ TSU v0.1</h1>
+  <p>Entropy: <span id="ent" class="big">0.00</span> bits/byte</p>
+  <p>Chalice earned: <span id="chal" class="big">0.00</span></p>
+  <input type="file" id="file" />
+
+  <script type="module">
+    import init, { TSU } from './tsu.js';
+    await init();
+
+    const tsu = TSU.new();
+    const entEl = document.getElementById('ent');
+    const chalEl = document.getElementById('chal');
+
+    document.getElementById('file').onchange = async e => {
+      const file = e.target.files[0];
+      const buffer = await file.arrayBuffer();
+      const data = new Uint8Array(buffer);
+      tsu.update(data);
+      entEl.textContent = tsu.entropy().toFixed(4);
+      chalEl.textContent = tsu.chalice_estimate().toFixed(2);
+    };
+  </script>
+</body>
+</html>
