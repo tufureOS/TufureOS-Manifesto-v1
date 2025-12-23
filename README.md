@@ -7,8 +7,6 @@ We are not building another blockchain.
 We are not building another phone OS.  
 We are ending the era of centralized kernels — forever.
 
-This is the one document that ties the mathematics you just saw from DeepSeek to the actual code that will run on every device in 2030.
-
 ## 1. The Core Equation (final, canonical form, 2025–∞)
 
 $$  
