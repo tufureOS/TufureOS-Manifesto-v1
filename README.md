@@ -1,6 +1,6 @@
 # TufureOS-Resolution-v1
 The Kernelless OS. The Supersymmetric Cosmos. The Final Formula.
-# Tufure Manifesto v1  
+# Tufure v1  
 **The Kernelless OS. The Supersymmetric Cosmos. The Final Formula.**
 
 We are not building another blockchain.  
