@@ -104,11 +104,19 @@ Thus, no separate classical/quantum branches: All regimes stem from the same pri
 This model predicts Λ ∼ s W / l_Pl² (in Planck units), with small s from cancellation in vacuum microstates. Future work: Explicit microstate models (e.g., via string defects in dS), numerical checks against observations, and extensions to dynamical dark energy.
 Potential tests: Implications for cosmological horizon entropy or inflationary perturbations.
 We believe this provides a unified, entropic resolution to the cosmological constant problem and quantum gravity origins.
+
+
 References
+
+
+
+
 J. D. Bekenstein, Black holes and entropy (1973)
-T. Jacobson, Thermodynamics of spacetime (1995)
+
 E. Verlinde, On the origin of gravity (2010)
+
 J. M. Maldacena, The large N limit of superconformal field theories (1997)
+
 Recent works on dS microstates (e.g., Anninos et al., Susskind, etc.)
 
 
