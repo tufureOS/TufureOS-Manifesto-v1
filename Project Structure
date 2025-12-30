@@ -1,0 +1,38 @@
+quantum-cosmology-emu/
+├── core/
+│   ├── cmd/
+│   │   └── qcosmo/
+│   │       └── main.go
+│   ├── internal/
+│   │   ├── burn/                        # Burn mechanism
+│   │   │   ├── burner.go                # Core burn logic
+│   │   │   ├── proof.go                 # Burn proof generation
+│   │   │   ├── witness.go               # Witness signatures
+│   │   │   └── verify.go                # Burn verification
+│   │   ├── duplicate/                   # Duplication system
+│   │   │   ├── duplicator.go            # Create duplicates
+│   │   │   ├── frozen_state.go          # Immutable state
+│   │   │   └── registry.go              # Duplicate registry
+│   │   ├── orchestrator/
+│   │   │   ├── orchestrator.go          # Main coordinator
+│   │   │   ├── burnable_core.go         # Burnable core wrapper
+│   │   │   ├── emulator_proxy.go        # Post-burn proxy
+│   │   │   ├── lambda.go
+│   │   │   └── psi.go
+│   │   ├── security/
+│   │   │   ├── zeroing.go               # Secure memory zeroing
+│   │   │   ├── keys.go                  # Key management
+│   │   │   └── audit.go                 # Security audit log
+│   │   ├── domain/
+│   │   ├── plugin/
+│   │   ├── bus/
+│   │   └── api/
+│   └── go.mod
+│
+├── emulators/                           # Rust emulators (unchanged)
+│   ├── entropy-emu/
+│   ├── pathintegral-emu/
+│   ├── field-emu/
+│   └── numerics-emu/
+│
+└── Makefile
