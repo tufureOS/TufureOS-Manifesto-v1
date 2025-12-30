@@ -1,0 +1,194 @@
+// core/internal/security/zeroing.go
+package security
+
+import (
+	"crypto/rand"
+	"runtime"
+	"sync"
+	"unsafe"
+)
+
+// SecureZero securely zeros a byte slice
+// Uses multiple passes to defeat memory recovery
+func SecureZero(b []byte) {
+	if len(b) == 0 {
+		return
+	}
+
+	// Pass 1: Zero
+	for i := range b {
+		b[i] = 0x00
+	}
+	runtime.KeepAlive(b)
+
+	// Pass 2: Ones
+	for i := range b {
+		b[i] = 0xFF
+	}
+	runtime.KeepAlive(b)
+
+	// Pass 3: Random
+	rand.Read(b)
+	runtime.KeepAlive(b)
+
+	// Pass 4: Zero again
+	for i := range b {
+		b[i] = 0x00
+	}
+	runtime.KeepAlive(b)
+
+	// Pass 5: Pattern 0x55
+	for i := range b {
+		b[i] = 0x55
+	}
+	runtime.KeepAlive(b)
+
+	// Pass 6: Pattern 0xAA
+	for i := range b {
+		b[i] = 0xAA
+	}
+	runtime.KeepAlive(b)
+
+	// Pass 7: Final zero
+	for i := range b {
+		b[i] = 0x00
+	}
+	runtime.KeepAlive(b)
+
+	// Memory barrier
+	runtime.GC()
+}
+
+// SecureZeroMultiPass zeros with configurable passes
+func SecureZeroMultiPass(b []byte, passes int) {
+	for pass := 0; pass < passes; pass++ {
+		switch pass % 4 {
+		case 0:
+			for i := range b {
+				b[i] = 0x00
+			}
+		case 1:
+			for i := range b {
+				b[i] = 0xFF
+			}
+		case 2:
+			rand.Read(b)
+		case 3:
+			for i := range b {
+				b[i] = byte(pass ^ i)
+			}
+		}
+		runtime.KeepAlive(b)
+	}
+
+	// Final zero
+	for i := range b {
+		b[i] = 0x00
+	}
+	runtime.KeepAlive(b)
+}
+
+// BurnableMemory represents memory that can be securely destroyed
+type BurnableMemory struct {
+	mu      sync.RWMutex
+	data    []byte
+	burned  bool
+	burnID  [32]byte
+}
+
+// NewBurnableMemory creates new burnable memory
+func NewBurnableMemory(size int) *BurnableMemory {
+	return &BurnableMemory{
+		data:   make([]byte, size),
+		burned: false,
+	}
+}
+
+// Write writes to burnable memory (fails if burned)
+func (bm *BurnableMemory) Write(offset int, data []byte) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
+	if bm.burned {
+		return ErrMemoryBurned
+	}
+
+	if offset+len(data) > len(bm.data) {
+		return ErrOutOfBounds
+	}
+
+	copy(bm.data[offset:], data)
+	return nil
+}
+
+// Read reads from burnable memory (fails if burned)
+func (bm *BurnableMemory) Read(offset, length int) ([]byte, error) {
+	bm.mu.RLock()
+	defer bm.mu.RUnlock()
+
+	if bm.burned {
+		return nil, ErrMemoryBurned
+	}
+
+	if offset+length > len(bm.data) {
+		return nil, ErrOutOfBounds
+	}
+
+	result := make([]byte, length)
+	copy(result, bm.data[offset:offset+length])
+	return result, nil
+}
+
+// Burn permanently destroys the memory
+func (bm *BurnableMemory) Burn(passes int) ([32]byte, error) {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
+	if bm.burned {
+		return bm.burnID, ErrAlreadyBurned
+	}
+
+	// Generate burn ID
+	rand.Read(bm.burnID[:])
+
+	// Secure zero the data
+	SecureZeroMultiPass(bm.data, passes)
+
+	// Mark as burned
+	bm.burned = true
+
+	// Release the underlying array
+	bm.data = nil
+
+	// Force garbage collection
+	runtime.GC()
+
+	return bm.burnID, nil
+}
+
+// IsBurned checks if memory is burned
+func (bm *BurnableMemory) IsBurned() bool {
+	bm.mu.RLock()
+	defer bm.mu.RUnlock()
+	return bm.burned
+}
+
+// Errors
+var (
+	ErrMemoryBurned  = errors.New("memory has been burned")
+	ErrAlreadyBurned = errors.New("memory already burned")
+	ErrOutOfBounds   = errors.New("access out of bounds")
+)
+
+// ZeroStruct zeros a struct's memory
+func ZeroStruct(v interface{}) {
+	val := reflect.ValueOf(v)
+	if val.Kind() != reflect.Ptr {
+		return
+	}
+	val = val.Elem()
+	size := val.Type().Size()
+	ptr := unsafe.Pointer(val.UnsafeAddr())
+	slice := (*[1 << 30]byte)(ptr)[:size:size]
+	SecureZero(slice)
+}
