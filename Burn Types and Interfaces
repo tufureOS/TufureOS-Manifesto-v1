@@ -1,0 +1,134 @@
+// core/internal/burn/types.go
+package burn
+
+import (
+	"crypto/sha256"
+	"time"
+)
+
+// BurnState represents the state of the core
+type BurnState int
+
+const (
+	StateActive BurnState = iota  // Core is active and operational
+	StatePending                   // Burn is pending (duplicates being created)
+	StateBurning                   // Burn in progress
+	StateBurned                    // Core is permanently burned
+)
+
+func (s BurnState) String() string {
+	switch s {
+	case StateActive:
+		return "ACTIVE"
+	case StatePending:
+		return "PENDING_BURN"
+	case StateBurning:
+		return "BURNING"
+	case StateBurned:
+		return "BURNED_FOREVER"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+// BurnProof is cryptographic proof that the core was burned
+type BurnProof struct {
+	// Unique burn identifier
+	BurnID [32]byte `json:"burn_id"`
+
+	// Hash of the core state at burn time
+	PreBurnStateHash [32]byte `json:"pre_burn_state_hash"`
+
+	// Hash proving destruction (hash of zeroed memory)
+	PostBurnHash [32]byte `json:"post_burn_hash"`
+
+	// Timestamp of burn (Unix nanoseconds)
+	BurnTimestamp int64 `json:"burn_timestamp"`
+
+	// Block height / sequence number
+	BurnSequence uint64 `json:"burn_sequence"`
+
+	// Witness signatures
+	Witnesses []WitnessSignature `json:"witnesses"`
+
+	// Entropy used in burn (for verification)
+	BurnEntropy [32]byte `json:"burn_entropy"`
+
+	// Hash chain linking to previous operations
+	PreviousHash [32]byte `json:"previous_hash"`
+}
+
+// Verify checks the burn proof integrity
+func (bp *BurnProof) Verify() bool {
+	// Verify burn ID is derived correctly
+	expectedID := sha256.Sum256(append(bp.PreBurnStateHash[:], bp.BurnEntropy[:]...))
+	if expectedID != bp.BurnID {
+		return false
+	}
+
+	// Verify timestamp is reasonable
+	if bp.BurnTimestamp <= 0 || bp.BurnTimestamp > time.Now().UnixNano() {
+		return false
+	}
+
+	// Verify witnesses (need minimum 3)
+	if len(bp.Witnesses) < 3 {
+		return false
+	}
+
+	validWitnesses := 0
+	for _, w := range bp.Witnesses {
+		if w.Verify(bp.BurnID) {
+			validWitnesses++
+		}
+	}
+
+	return validWitnesses >= 3
+}
+
+// WitnessSignature represents a witness attestation to the burn
+type WitnessSignature struct {
+	WitnessID   [32]byte `json:"witness_id"`
+	Signature   [64]byte `json:"signature"`
+	Timestamp   int64    `json:"timestamp"`
+	PublicKey   [32]byte `json:"public_key"`
+}
+
+// Verify checks the witness signature
+func (ws *WitnessSignature) Verify(burnID [32]byte) bool {
+	// In production, use ed25519 or similar
+	message := append(burnID[:], ws.WitnessID[:]...)
+	expectedSig := sha256.Sum256(append(message, ws.PublicKey[:]...))
+	
+	// Simplified verification (use real crypto in production)
+	return expectedSig[0] == ws.Signature[0]
+}
+
+// BurnConfig configures the burn process
+type BurnConfig struct {
+	// Minimum duplicates required before burn
+	MinDuplicates int
+
+	// Required witness count
+	RequiredWitnesses int
+
+	// Secure zeroing passes
+	ZeroingPasses int
+
+	// Burn delay (time to wait after initiating)
+	BurnDelay time.Duration
+
+	// Allow abort during pending state
+	AllowAbort bool
+}
+
+// DefaultBurnConfig returns safe defaults
+func DefaultBurnConfig() BurnConfig {
+	return BurnConfig{
+		MinDuplicates:     3,
+		RequiredWitnesses: 3,
+		ZeroingPasses:     7, // DoD 5220.22-M standard
+		BurnDelay:         30 * time.Second,
+		AllowAbort:        true,
+	}
+}
